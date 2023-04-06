@@ -28,7 +28,7 @@
       <option value="Manajemen Informatika">Manajemen Informatika</option>
       <option value="Administrasi Bisnis">Administrasi Bisnis</option>
     </select>
-    <button id="button">Simpan</button>
+    <button id="button" onclick="saveData()">Simpan</button>
   </div>
   <table style="margin-top: 10px">
     <thead>
@@ -37,12 +37,76 @@
         <th>Nama</th>
         <th>Sekolah</th>
         <th>Program Studi</th>
+        <th>Action</th>
       </tr>
     </thead>
     <tbody id="result"></tbody>
   </table>
   <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
   <script>
+
+    const editData = (id, name, school, prodi) => {
+      document.getElementById('name').value = name;
+      document.getElementById('school').value = school;
+      document.getElementById('prodi').value = prodi;
+      document.getElementById('button').innerText = 'Ubah';
+      document.getElementById('button').setAttribute('onclick', `updateData(${id})`);
+    }
+
+    const updateData = async (id) => {
+      let nameForm = document.getElementById('name').value;
+      let schoolForm = document.getElementById('school').value;
+      let prodiForm = document.getElementById('prodi').value;
+      let text = "Betul data akan diupdate?"
+      if (confirm(text) == true) {
+        await axios.patch(`http://localhost:3000/students/${id}`, {
+          name: nameForm,
+          school: schoolForm,
+          prodi: prodiForm
+        })
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            console.log(error.message);
+          });
+      }
+
+    }
+
+    const saveData = async () => {
+      let nameForm = document.getElementById('name').value;
+      let schoolForm = document.getElementById('school').value;
+      let prodiForm = document.getElementById('prodi').value;
+      await axios.post(`http://localhost:3000/students`, {
+        name: nameForm,
+        school: schoolForm,
+        prodi: prodiForm
+      })
+        .then((response) => {
+          alert('sukses')
+          console.log(response);
+        })
+        .catch((error) => {
+          console.log(error.message);
+        });
+    }
+
+    const deleteData = async (id) => {
+      let text = "Betul data akan dihapus?";
+      if (confirm(text) == true) {
+        await axios.delete(`http://localhost:3000/students/${id}`)
+          .then((response) => {
+            console.log(response);
+          })
+          .catch((error) => {
+            console.log(error.message);
+          });
+      }
+
+
+    }
+
     const getData = async () => {
       await axios.get(`http://localhost:3000/students`)
         .then((response) => {
@@ -57,20 +121,26 @@
                 <td>${students[i].name}</td>
                 <td>${students[i].school}</td>
                 <td>${students[i].prodi}</td>
+                <td>
+                  <button onclick="editData('${students[i].id}','${students[i].name}','${students[i].school}','${students[i].prodi}')">edit</button>
+                  <button onclick="deleteData(${students[i].id})">delete</button>
+                </td>
               </tr>`
             }
           } else {
             bucket += `
               <tr>
-                <td colspan="4" style="text-align: center">Data tidak ditemukan</td>
-              </tr>`
+                <td colspan="5" style="text-align: center">Data tidak ditemukan</td>
+              </tr>
+            `
           }
+
           document.getElementById('result').innerHTML = bucket;
         })
         .catch((error) => {
           let bucket = `
           <tr>
-            <td colspan="4" style="text-align: center">${error.message}</td>
+            <td colspan="5" style="text-align: center">${error.message}</td>
           </tr>
         `
           document.getElementById('result').innerHTML = bucket;
